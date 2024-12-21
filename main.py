@@ -37,6 +37,15 @@ class Application:
 
         pass
 
+    def play_samples(self, samples: np.ndarray) -> None:
+        """
+        Play samples
+        :param samples: array of sample
+        """
+
+        self.stream.write(
+            (np.vectorize(clamp)(samples)).tobytes())
+
 
 def main():
     app = Application(sample_rate=48000)

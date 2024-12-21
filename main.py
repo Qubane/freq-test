@@ -35,7 +35,9 @@ class Application:
         Runs the application
         """
 
-        pass
+        self.play_samples(
+            self.generate_frequency_sweep(50, 100, 3)
+        )
 
     def play_samples(self, samples: np.ndarray) -> None:
         """
@@ -54,6 +56,18 @@ class Application:
         :param duration: duration
         :return: sample array
         """
+
+        samples = np.zeros(int(self.sample_rate * duration), dtype=np.float32)
+
+        t = 0
+        freq_step = start_freq / self.sample_rate * np.pi * 2
+        freq_change_rate = (end_freq - start_freq) / self.sample_rate**2 * np.pi * 2
+        for i in range(len(samples)):
+            samples[i] = np.sin(t)
+            t += freq_step
+            freq_step += freq_change_rate
+
+        return samples
 
 
 def main():

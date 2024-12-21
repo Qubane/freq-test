@@ -46,6 +46,15 @@ class Application:
         self.stream.write(
             (np.vectorize(clamp)(samples)).tobytes())
 
+    def generate_frequency_sweep(self, start_freq: float, end_freq: float, duration: float) -> np.ndarray:
+        """
+        Generates a frequency sweep
+        :param start_freq: starting frequency
+        :param end_freq: frequency goal
+        :param duration: duration
+        :return: sample array
+        """
+
 
 def main():
     app = Application(sample_rate=48000)

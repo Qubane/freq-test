@@ -43,12 +43,6 @@ class Application:
 
         asyncio.run(coro())
 
-    async def record_chunk(self) -> np.ndarray:
-        """
-        Records a chunk of audio from default microphone
-        :return: an array of samples
-        """
-
     async def play_samples(self, samples: np.ndarray) -> None:
         """
         Play samples
@@ -59,6 +53,18 @@ class Application:
         for i in range(0, len(data), self.chunk_size):
             await self.play_chunk(data[i:i + self.chunk_size])
 
+    async def record_samples(self, duration: float) -> np.ndarray:
+        """
+        Records samples from the microphone
+        :param duration: record duration
+        :return: array of samples
+        """
+
+        samples = np.zeros(int(self.sample_rate * duration), dtype=np.float32)
+        for i in range(0, len(samples), self.chunk_size):
+            samples[i:i+self.chunk_size] = await self.record_chunk()
+        return samples
+
     async def play_chunk(self, chunk: bytes) -> None:
         """
         Plays an audio chunk.
@@ -66,6 +72,15 @@ class Application:
         """
 
         self.stream.write(chunk)
+
+    async def record_chunk(self) -> np.ndarray:
+        """
+        Records a chunk of audio from default microphone
+        :return: an array of samples
+        """
+
+        raw_data = self.stream.read(self.chunk_size)
+        return np.array(raw_data, dtype=np.float32)
 
     def generate_frequency_sweep(self, start_freq: float, end_freq: float, duration: float) -> np.ndarray:
         """

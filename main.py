@@ -22,13 +22,14 @@ class Application:
     def __init__(self, sample_rate: int):
         self.sample_rate: int = sample_rate
         self.byte_width: int = 4
+        self.chunk_size: int = int(self.sample_rate / 100)
 
         self.pyaudio: pyaudio.PyAudio = pyaudio.PyAudio()
         self.stream = self.pyaudio.open(
             format=self.pyaudio.get_format_from_width(self.byte_width),
             channels=1,
             rate=self.sample_rate,
-            output=True)
+            input=True, output=True)
 
     def run(self) -> None:
         """
@@ -36,7 +37,7 @@ class Application:
         """
 
         self.play_samples(
-            self.generate_frequency_sweep(20, 20000, 10))
+            self.generate_frequency_sweep(20, 20000, 1))
 
     def play_samples(self, samples: np.ndarray) -> None:
         """
@@ -44,8 +45,9 @@ class Application:
         :param samples: array of sample
         """
 
-        self.stream.write(
-            (np.vectorize(clamp)(samples)).tobytes())
+        data = (np.vectorize(clamp)(samples)).tobytes()
+        for i in range(0, len(data), self.chunk_size):
+            self.stream.write(data[i:i+self.chunk_size])
 
     def generate_frequency_sweep(self, start_freq: float, end_freq: float, duration: float) -> np.ndarray:
         """

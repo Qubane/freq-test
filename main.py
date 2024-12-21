@@ -23,7 +23,7 @@ class Application:
     def __init__(self, sample_rate: int):
         self.sample_rate: int = sample_rate
         self.byte_width: int = 4
-        self.chunk_size: int = int(self.sample_rate / 100)
+        self.chunk_size: int = 1024
 
         self.pyaudio: pyaudio.PyAudio = pyaudio.PyAudio()
         self.stream = self.pyaudio.open(
@@ -38,8 +38,14 @@ class Application:
         """
 
         async def coro():
-            await self.play_samples(
-                self.generate_frequency_sweep(50, 100, 3))
+            play_samples = self.generate_frequency_sweep(20, 20000, 2)
+            result = await asyncio.gather(
+                self.play_samples(play_samples),
+                self.record_samples(len(play_samples) / self.sample_rate))
+            record_samples = result[1]
+            with open('good.txt', "w", encoding="utf-8") as file:
+                for val in record_samples:
+                    file.write(f"{val}\n")
 
         asyncio.run(coro())
 
@@ -62,7 +68,10 @@ class Application:
 
         samples = np.zeros(int(self.sample_rate * duration), dtype=np.float32)
         for i in range(0, len(samples), self.chunk_size):
-            samples[i:i+self.chunk_size] = await self.record_chunk()
+            chunk = await self.record_chunk()
+            if i + self.chunk_size >= len(samples):
+                chunk = chunk[:len(samples) - (len(samples) // self.chunk_size * self.chunk_size)]
+            samples[i:i+self.chunk_size] = chunk
         return samples
 
     async def play_chunk(self, chunk: bytes) -> None:
@@ -80,7 +89,7 @@ class Application:
         """
 
         raw_data = self.stream.read(self.chunk_size)
-        return np.array(raw_data, dtype=np.float32)
+        return np.frombuffer(raw_data, dtype=np.float32)
 
     def generate_frequency_sweep(self, start_freq: float, end_freq: float, duration: float) -> np.ndarray:
         """

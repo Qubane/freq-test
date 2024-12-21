@@ -36,8 +36,7 @@ class Application:
         """
 
         self.play_samples(
-            self.generate_frequency_sweep(50, 100, 3)
-        )
+            self.generate_frequency_sweep(20, 20000, 10))
 
     def play_samples(self, samples: np.ndarray) -> None:
         """
@@ -61,7 +60,7 @@ class Application:
 
         t = 0
         freq_step = start_freq / self.sample_rate * np.pi * 2
-        freq_change_rate = (end_freq - start_freq) / self.sample_rate**2 * np.pi * 2
+        freq_change_rate = (end_freq - start_freq) / self.sample_rate**2 * np.pi * 2 / duration
         for i in range(len(samples)):
             samples[i] = np.sin(t)
             t += freq_step

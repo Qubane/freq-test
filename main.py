@@ -1,4 +1,5 @@
 import pyaudio
+import asyncio
 import numpy as np
 
 
@@ -36,10 +37,19 @@ class Application:
         Runs the application
         """
 
-        self.play_samples(
-            self.generate_frequency_sweep(20, 20000, 1))
+        async def coro():
+            await self.play_samples(
+                self.generate_frequency_sweep(50, 100, 3))
 
-    def play_samples(self, samples: np.ndarray) -> None:
+        asyncio.run(coro())
+
+    async def record_chunk(self) -> np.ndarray:
+        """
+        Records a chunk of audio from default microphone
+        :return: an array of samples
+        """
+
+    async def play_samples(self, samples: np.ndarray) -> None:
         """
         Play samples
         :param samples: array of sample
@@ -47,7 +57,15 @@ class Application:
 
         data = (np.vectorize(clamp)(samples)).tobytes()
         for i in range(0, len(data), self.chunk_size):
-            self.stream.write(data[i:i+self.chunk_size])
+            await self.play_chunk(data[i:i + self.chunk_size])
+
+    async def play_chunk(self, chunk: bytes) -> None:
+        """
+        Plays an audio chunk.
+        :param chunk: chunk of audio
+        """
+
+        self.stream.write(chunk)
 
     def generate_frequency_sweep(self, start_freq: float, end_freq: float, duration: float) -> np.ndarray:
         """
